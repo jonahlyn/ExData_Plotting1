@@ -1,0 +1,191 @@
+---
+title: "Course Project 1"
+output: html_document
+---
+
+## Introduction
+
+This assignment uses data from the UC Irvine Machine Learning Repository, a popular repository for machine learning datasets. In particular, we will be using the “Individual household electric power consumption Data Set” which I have made available on the course web site:
+
+Dataset: Electric power consumption [20Mb]
+
+Description: Measurements of electric power consumption in one household with a one-minute sampling rate over a period of almost 4 years. Different electrical quantities and some sub-metering values are available.
+
+The following descriptions of the 9 variables in the dataset are taken from the UCI web site:
+
+Date: Date in format dd/mm/yyyy
+Time: time in format hh:mm:ss
+Global_active_power: household global minute-averaged active power (in kilowatt)
+Global_reactive_power: household global minute-averaged reactive power (in kilowatt)
+Voltage: minute-averaged voltage (in volt)
+Global_intensity: household global minute-averaged current intensity (in ampere)
+Sub_metering_1: energy sub-metering No. 1 (in watt-hour of active energy). It corresponds to the kitchen, containing mainly a dishwasher, an oven and a microwave (hot plates are not electric but gas powered).
+Sub_metering_2: energy sub-metering No. 2 (in watt-hour of active energy). It corresponds to the laundry room, containing a washing-machine, a tumble-drier, a refrigerator and a light.
+Sub_metering_3: energy sub-metering No. 3 (in watt-hour of active energy). It corresponds to an electric water-heater and an air-conditioner.
+
+
+## Loading the data
+
+When loading the dataset into R, please consider the following:
+
+The dataset has 2,075,259 rows and 9 columns. First calculate a rough estimate of how much memory the dataset will require in memory before reading into R. Make sure your computer has enough memory (most modern computers should be fine).
+
+```{r}
+# Since the data is mostly numeric, rows * columns * 8 bytes.
+bytes <- 2075259 * 9 * 8
+mbytes <- bytes / (2^20)
+print(paste0("RAM needed: ", ceiling(mbytes * 2), "MB"))
+```
+
+
+```{r}
+# Unzip the data file into the data directory.
+zipfile <- "data/exdata-data-household_power_consumption.zip"
+unzip(zipfile, exdir = "data")
+
+# Prepare an output directory
+if(!file.exists("output")){ dir.create("output") }
+```
+
+
+```{r}
+# Wrap the data frame in tbl_df to make it easier to deal with.
+library(dplyr)
+
+# The file is ';' delimited so read it in using the csv2 function.
+datafile <- "data/household_power_consumption.txt"
+power.data <- tbl_df(read.csv2(datafile, stringsAsFactors = FALSE, na.strings = "?"))
+```
+
+
+```{r}
+# Clean up the column names a bit.
+colnames(power.data) <- gsub("_", ".", tolower(colnames(power.data)))
+
+# Remove incomplete data
+power.data <- power.data[complete.cases(power.data),]
+
+# Convert columns to the correct type
+power.data$global.active.power <- as.numeric(power.data$global.active.power)
+```
+
+
+We will only be using data from the dates 2007-02-01 and 2007-02-02. One alternative is to read the data from just those dates rather than reading in the entire dataset and subsetting to those dates.
+
+You may find it useful to convert the Date and Time variables to Date/Time classes in R using the strptime() and as.Date() functions.
+
+
+```{r}
+# nrow(power.data)
+# nrow(power.data[complete.cases(power.data),])
+# power.data[power.data$date %in% c("1/2/2007", "2/2/2007"),]
+
+#power.data$datetime <- as.POSIXct(paste(power.data$date, power.data$time), format = "%d/%m/%Y %H:%M:%S")
+
+#power.data$datetime <- as.POSIXct(power.data$date, format = "%d/%m/%Y")
+
+power.data$datetime <- strptime(paste(power.data$date, power.data$time), format = "%d/%m/%Y %H:%M:%S")
+```
+
+
+```{r}
+#two.days <- filter(power.data, datetime >= as.POSIXlt("2007-02-01") & datetime <= as.POSIXlt("2007-02-02"))
+
+two.days <- power.data[power.data$date %in% c("1/2/2007", "2/2/2007"),]
+```
+
+
+Note that in this dataset missing values are coded as ?.
+
+
+## Making Plots
+
+Our overall goal here is simply to examine how household energy usage varies over a 2-day period in February, 2007. Your task is to reconstruct the following plots below, all of which were constructed using the base plotting system.
+
+First you will need to fork and clone the following GitHub repository: https://github.com/rdpeng/ExData_Plotting1
+
+For each plot you should
+
+Construct the plot and save it to a PNG file with a width of 480 pixels and a height of 480 pixels.
+
+Name each of the plot files as plot1.png, plot2.png, etc.
+
+```{r}
+# plot1
+hist(two.days$global.active.power, 
+     xlab = "Global Active Power (kilowatts)", 
+     main = "Global Active Power", 
+     col = "red")
+
+# save as a 480x480 png named plot1.png
+dev.copy(png, file = "output/plot1.png", width = 480, height = 480)
+dev.off()
+```
+
+
+```{r}
+# plot2
+plot(two.days$datetime, two.days$global.active.power, 
+     type = "l", 
+     main = "", 
+     xlab = "", 
+     ylab = "Global Active Power (kilowatts)")
+```
+
+
+```{r}
+# plot 3
+plot(two.days$datetime, two.days$sub.metering.1, 
+     type = "n", 
+     main = "", 
+     xlab = "", 
+     ylab = "Energy sub metering")
+lines(two.days$datetime, two.days$sub.metering.1)
+lines(two.days$datetime, two.days$sub.metering.2, col = "red")
+lines(two.days$datetime, two.days$sub.metering.3, col = "blue")
+
+par(ps = 12)
+legend("topright", lty= 1, legend = c("Sub_metering_1", "Sub_metering_2", "Sub_metering_3"), col = c("black", "red", "blue"))
+```
+
+
+```{r}
+par(mfcol = c(2,2), mar = c(4, 4, 2, 1))
+
+plot(two.days$datetime, two.days$global.active.power, 
+     type = "l", 
+     main = "", 
+     xlab = "", 
+     ylab = "Global Active Power (kilowatts)")
+
+
+plot(two.days$datetime, two.days$sub.metering.1, 
+     type = "n", 
+     main = "", 
+     xlab = "", 
+     ylab = "Energy sub metering")
+lines(two.days$datetime, two.days$sub.metering.1)
+lines(two.days$datetime, two.days$sub.metering.2, col = "red")
+lines(two.days$datetime, two.days$sub.metering.3, col = "blue")
+
+par(ps = 12)
+legend("topright", lty= 1, bty = "n", legend = c("Sub_metering_1", "Sub_metering_2", "Sub_metering_3"), col = c("black", "red", "blue"), y.intersp = 0.8)
+
+
+plot(two.days$datetime, two.days$voltage, xlab = "datetime", ylab = "Voltage", type = "l")
+
+
+plot(two.days$datetime, two.days$global.reactive.power, xlab = "datetime", ylab = "Global_reactive_power", type = "l")
+```
+
+
+Create a separate R code file (plot1.R, plot2.R, etc.) that constructs the corresponding plot, i.e. code in plot1.R constructs the plot1.png plot. Your code file should include code for reading the data so that the plot can be fully reproduced. You should also include the code that creates the PNG file.
+
+Add the PNG file and R code file to your git repository
+
+When you are finished with the assignment, push your git repository to GitHub so that the GitHub version of your repository is up to date. There should be four PNG files and four R code files.
+
+The four plots that you will need to construct are shown below.
+
+
+

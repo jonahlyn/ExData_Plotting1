@@ -1,0 +1,5 @@
+.Rproj.user
+.Rhistory
+.RData
+*.Rproj
+data/household_power_consumption.txt
