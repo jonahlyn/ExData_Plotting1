@@ -1,6 +1,6 @@
 # Course Project 1
 
-The code contained in this repository was written for the final project for Coursera's Exploratory Data Analysis Course.
+The code contained in this repository was written for project 1 for Coursera's Exploratory Data Analysis Course.
 
 The original assignment instructions including some test code written for completing each step can be found in `project1.html`.
 
